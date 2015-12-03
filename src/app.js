@@ -33,4 +33,24 @@ http.listen(3000, () => {
   console.log(`Serving on port: ${http.address().port}`);
 });
 
+let chatters = [];
+io.on('connection', (socket) => {
+
+  console.log('a user connected');
+  socket.emit('user connected', 'you connected!');
+  chatters.push(socket.id);
+  socket.on('disconnect', () => {
+    console.log('USER DISCONNECTED', socket.id);
+    console.log(chatters.indexOf(socket.id));
+    chatters.splice(chatters.indexOf(socket.id), 1);
+  });
+  // socket.on('blast', (msg) => {
+  //   console.log(msg, socket.id)
+  // })
+  socket.on('message sent', (msg) => {
+    socket.broadcast.emit('receive message', msg);
+  });
+
+});
+
 module.exports = app;
