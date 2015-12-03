@@ -36,9 +36,14 @@ http.listen(3000, () => {
 let chatters = [];
 io.on('connection', (socket) => {
 
+  if (chatters.length < 2) {
+    socket.join('alpha room');
+    socket.emit('user connected', 'alpha room');
+  }
+
   console.log('a user connected');
-  socket.emit('user connected', 'you connected!');
   chatters.push(socket.id);
+
   socket.on('disconnect', () => {
     console.log('USER DISCONNECTED', socket.id);
     console.log(chatters.indexOf(socket.id));
@@ -48,7 +53,10 @@ io.on('connection', (socket) => {
   //   console.log(msg, socket.id)
   // })
   socket.on('message sent', (msg) => {
-    socket.broadcast.emit('receive message', msg);
+    console.log('1', socket.id, socket.rooms);
+    console.log('room', msg.room)
+    socket.broadcast.to(msg.room).emit('receive message', msg);
+    // socket.to(msg.otherRoom).send('receive message', msg);
   });
 
 });
