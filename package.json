@@ -1,0 +1,39 @@
+{
+  "name": "close-api",
+  "version": "1.0.0",
+  "description": "Back end for Close chatting app.",
+  "main": "app.js",
+  "scripts": {
+    "test": "test",
+    "dev": "source .env && nodemon dist/app.js"
+  },
+  "keywords": [
+    "Express",
+    "MongoDB",
+    "JWT",
+    "Authentication",
+    "Socket.io"
+  ],
+  "author": "Todd Kronenberg <toddkronenberg@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^0.8.5",
+    "body-parser": "^1.13.3",
+    "express": "^4.13.3",
+    "http": "0.0.0",
+    "jwt-simple": "^0.3.0",
+    "lodash": "^3.10.1",
+    "moment": "^2.10.6",
+    "mongoose": "^4.1.3",
+    "morgan": "^1.6.1",
+    "socket.io": "^1.3.7"
+  },
+  "devDependencies": {
+    "babel-preset-es2015": "^6.1.18",
+    "gulp": "^3.9.0",
+    "gulp-babel": "^6.1.1",
+    "gulp-jshint": "^2.0.0",
+    "jshint": "^2.8.0",
+    "jshint-stylish": "^2.1.0"
+  }
+}
