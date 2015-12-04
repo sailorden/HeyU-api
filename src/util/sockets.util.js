@@ -26,18 +26,20 @@ io.on('connection', (socket) => {
     availableChatters.splice(availableChatters.indexOf(socket.id), 1);
   });
 
+  // this gets run when user closes the app
   socket.on('disconnect', () => {
     // console.log('USER DISCONNECTED', socket.id);
-    // console.log(availableChatters.indexOf(socket.id));
     availableChatters.splice(availableChatters.indexOf(socket.id), 1);
   });
 
 
   socket.on('message sent', (msg) => {
-    // console.log('1', socket.id, socket.rooms);
-    // console.log('room', msg.room)
-    // socket.broadcast.to(msg.room).emit('receive message', msg);
-    socket.broadcast.to(msg.room).emit('receive message', msg);
+    let socketIdArr = [];
+    socketIdArr = io.sockets.sockets.map((socket) => socket.id);
+    if (socketIdArr.indexOf(msg.room) === -1)
+      socket.emit('user got disconnected');
+    else
+      socket.broadcast.to(msg.room).emit('receive message', msg);
   });
 
   // receiving step 1 in finding person, sends back user array
