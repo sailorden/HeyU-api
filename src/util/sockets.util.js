@@ -3,16 +3,19 @@
 module.exports = (io) => {
 
 let availableChatters = [];
+let coordsOfChatters = [];
 io.on('connection', (socket) => {
 
   socket.emit('user connected', socket.id);
 
 
-  socket.on('available for chat', () => {
+  socket.on('available for chat', (coords) => {
     console.log('\nsocket id avail', socket.id);
     availableChatters.push(socket.id);
-    availableChatters = unique(availableChatters);
-    console.log('after unique', availableChatters);
+    coordsOfChatters.push(coords);
+    availableChatters = unique(availableChatters, coordsOfChatters);
+    console.log('after uniq', availableChatters);
+    console.log('after uniq, IS THERE A BUG IN UNIQUE():', coordsOfChatters.length !== availableChatters.length);
     // if there was only one available person (therefore no one to talk with),
     // emit event to tell that one that someone is available now so they can,
     // resume trying to connect.
@@ -23,13 +26,17 @@ io.on('connection', (socket) => {
 
   socket.on('unavailable for chat', () => {
     console.log('\nsocket id unavail', socket.id);
-    availableChatters.splice(availableChatters.indexOf(socket.id), 1);
+    let indexToCut = availableChatters.indexOf(socket.id);
+    availableChatters.splice(indexToCut, 1);
+    coordsOfChatters.splice(indexToCut, 1);
   });
 
   // this gets run when user closes the app
   socket.on('disconnect', () => {
     // console.log('USER DISCONNECTED', socket.id);
-    availableChatters.splice(availableChatters.indexOf(socket.id), 1);
+    let indexToCut = availableChatters.indexOf(socket.id);
+    availableChatters.splice(indexToCut, 1);
+    coordsOfChatters.splice(indexToCut, 1);
   });
 
 
@@ -45,8 +52,11 @@ io.on('connection', (socket) => {
   // receiving step 1 in finding person, sends back user array
   socket.on('finding people', (mySocketId, cb) => {
     let people = availableChatters.slice();
-    people.splice(availableChatters.indexOf(mySocketId), 1);
-    cb(people);
+    let coords = coordsOfChatters.slice();
+    let thisSocketsIndex = availableChatters.indexOf(mySocketId);
+    people.splice(thisSocketsIndex, 1);
+    coords.splice(thisSocketsIndex, 1);
+    cb(people, coords);
   });
 
   // receiving step 2 in finding person
@@ -77,9 +87,14 @@ io.on('connection', (socket) => {
 
 });
 
-function unique(arr) {
+function unique(arr, coordsArr) {
   return arr.filter((el, index, array) => {
-    return array.indexOf(el) === index;
+    if (array.indexOf(el) === index)
+      return true;
+    else {
+      coordsArr.splice(index,1);
+      return false;
+    }
   });
 }
 
