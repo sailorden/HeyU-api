@@ -2,7 +2,7 @@
   "name": "close-api",
   "version": "1.0.0",
   "description": "Back end for Close chatting app.",
-  "main": "app.js",
+  "main": "dist/app.js",
   "scripts": {
     "test": "test",
     "dev": "source .env && nodemon dist/app.js"
