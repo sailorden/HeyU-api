@@ -3,40 +3,56 @@
 const mongoose = require('mongoose'),
       jwt = require('jwt-simple'),
       moment = require('moment'),
+      Request = require('request'),
+      qs = require('query-string'),
       bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
-  email:        { type: String, required: true },
-  password:     { type: String, required: true },
+  facebook:     { type: String },
+  name:         { type: String },
+  gender:       { type: String },
+  photo:        { type: String },
   createdAt:    { type: Date, default: Date.now, required: true }
 });
 
-userSchema.statics.create = (user, cb) => {
-  User.findOne({email: user.email}, (err, dbUser) => {
-    if (err) return cb('Database Error');
-    if (dbUser) return cb('User with that email already exists');
-    dbUser.password = bcrypt.hashSync(dbUser.password, 8);
-    let newUser = new User(dbUser);
-    newUser.save((err, savedUser) => {
-      if (err || !savedUser) return cb('Error saving user');
-      cb(null, savedUser);
+
+// Takes auth code acquired from facebook auth request.
+// Returns user profile to callback.
+userSchema.statics.facebook = (authCode, cb) => {
+  let fields = ['first_name', 'gender'];
+  let accessTokenUrl = 'https://graph.facebook.com/oauth/access_token';
+  let graphApiUrl = `https://graph.facebook.com/me?fields=${fields.join(',')}`;
+  let params = {
+    code: authCode,
+    client_id: '197260627276113',
+    client_secret: process.env.FACEBOOK_SECRET,
+    redirect_uri: 'http://localhost:3000/auth/facebook'
+  };
+  Request.get({url: accessTokenUrl, qs: params, json: true}, (err, response, accessToken) => {
+    accessToken = qs.parse(accessToken);
+    Request.get({url: graphApiUrl, qs: accessToken, json: true}, (err, response, profile) => {
+      if (profile.error) return cb(profile.error.message);
+      cb(null, {facebook: profile.id, name: profile.first_name, gender: profile.gender, photo: `https://graph.facebook.com/${profile.id}/picture?type=large`});
     });
   });
 };
 
-// user parameter is email and password
-userSchema.statics.login = (creds, cb) => {
-  User.findOne({email: creds.email}, (err, user) => {
-    if (err) return cb('Error finding user');
-    if (!user) return cb('Your email or password did not match');
-    if (bcrypt.compareSync(creds.password, user.password))
-      return cb(null, user);
-    else
-      return cb('Your email or password did not match');
+userSchema.statics.create = (provider, profile, cb) => {
+  let query = {};
+  query[provider] = profile[provider];
+  User.findOne(query, (err, user) => {
+    if (user) return cb(null, user);
+    user = new User(profile);
+    user.save(cb);
   });
 };
 
-userSchema.methods.token = () => {
+
+// trying to use => broke this function because it couldn't get User
+// as the context from User.token(). And apparently you can't change
+// a function's context with the the bind/call/apply trio when using
+// the fat arrow syntax.
+userSchema.statics.token = function() {
   let payload = {
     sub: this._id,
     iat: moment().unix(),
@@ -45,11 +61,11 @@ userSchema.methods.token = () => {
   return jwt.encode(payload, process.env.TOKEN_SECRET);
 };
 
-userSchema.methods.sanitize = () => {
-  let userObject = this.toObject();
-  delete userObject.password;
-  return userObject;
-};
+// userSchema.methods.sanitize = () => {
+//   let userObject = this.toObject();
+//   delete userObject.password;
+//   return userObject;
+// };
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;
