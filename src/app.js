@@ -26,7 +26,7 @@ app.use('/', router);
 // ... no 'after middleware yet
 
 // connect to mongoDB with apiStarter database
-mongoose.connect('mongodb://localhost/close');
+mongoose.connect('mongodb://localhost/heyu');
 
 // run Express web server
 http.listen(3000, () => {

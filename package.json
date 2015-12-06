@@ -1,7 +1,7 @@
 {
-  "name": "close-api",
+  "name": "heyu-api",
   "version": "1.0.0",
-  "description": "Back end for Close chatting app.",
+  "description": "Back end for HeyU chatting app.",
   "main": "dist/app.js",
   "scripts": {
     "test": "test",
