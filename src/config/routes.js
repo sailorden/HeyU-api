@@ -15,6 +15,5 @@ module.exports = (router) => {
               mw.validateLogin,
               require('./../routes/user/login'));
 
-  router.get('/auth/facebook', require('./../routes/user/authenticate.user'));
-  // router.post('/auth/facebook', require('./../routes/user/authenticate.user'));
+  router.post('/user/authenticate', require('./../routes/user/authenticate.user'));
 };

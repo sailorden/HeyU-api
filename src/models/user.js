@@ -8,42 +8,28 @@ const mongoose = require('mongoose'),
       bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
-  facebook:     { type: String },
-  name:         { type: String },
-  gender:       { type: String },
-  photo:        { type: String },
+  facebook:     { type: String, required: true },
+  name:         { type: String, required: true },
+  gender:       { type: String, required: true },
+  photo:        { type: String, required: true },
   createdAt:    { type: Date, default: Date.now, required: true }
 });
 
 
-// Takes auth code acquired from facebook auth request.
-// Returns user profile to callback.
-userSchema.statics.facebook = (authCode, cb) => {
-  let fields = ['first_name', 'gender'];
-  let accessTokenUrl = 'https://graph.facebook.com/oauth/access_token';
-  let graphApiUrl = `https://graph.facebook.com/me?fields=${fields.join(',')}`;
-  let params = {
-    code: authCode,
-    client_id: '197260627276113',
-    client_secret: process.env.FACEBOOK_SECRET,
-    redirect_uri: 'http://localhost:3000/auth/facebook'
-  };
-  Request.get({url: accessTokenUrl, qs: params, json: true}, (err, response, accessToken) => {
-    accessToken = qs.parse(accessToken);
-    Request.get({url: graphApiUrl, qs: accessToken, json: true}, (err, response, profile) => {
-      if (profile.error) return cb(profile.error.message);
-      cb(null, {facebook: profile.id, name: profile.first_name, gender: profile.gender, photo: `https://graph.facebook.com/${profile.id}/picture?type=large`});
-    });
-  });
-};
-
-userSchema.statics.create = (provider, profile, cb) => {
-  let query = {};
-  query[provider] = profile[provider];
-  User.findOne(query, (err, user) => {
-    if (user) return cb(null, user);
-    user = new User(profile);
-    user.save(cb);
+userSchema.statics.login = (payload, cb) => {
+  User.findOne({facebook: payload.id}, (err, user) => {
+    if (err) return cb(err);
+    if (user) return cb(null, user, true);
+    else {
+      user = {
+        facebook: payload.id,
+        name: payload.first_name,
+        gender: payload.gender,
+        photo: `https://graph.facebook.com/${payload.id}/picture?type=large`
+      };
+      let newUser = new User(user);
+      newUser.save((err, newUser) => cb(err, newUser, false));
+    }
   });
 };
 
@@ -52,7 +38,7 @@ userSchema.statics.create = (provider, profile, cb) => {
 // as the context from User.token(). And apparently you can't change
 // a function's context with the the bind/call/apply trio when using
 // the fat arrow syntax.
-userSchema.statics.token = function() {
+userSchema.methods.token = function() {
   let payload = {
     sub: this._id,
     iat: moment().unix(),
