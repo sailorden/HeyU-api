@@ -12,6 +12,10 @@ const userSchema = new mongoose.Schema({
   name:         { type: String, required: true },
   gender:       { type: String, required: true },
   photo:        { type: String, required: true },
+  age:          { type: Number },
+  bio:          { type: String },
+  profession:   { type: String },
+  interests:    [{ type: String }],
   createdAt:    { type: Date, default: Date.now, required: true }
 });
 

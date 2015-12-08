@@ -4,9 +4,14 @@ const User = require('./../../models/user');
 
 // takes user id as params userId
 module.exports = (req, res) => {
-  User.findById(req.params.userId).select('-password').exec((err, user) => {
-    if (err) return res.status(500).send('Error finding user');
-    if (!user) return res.status(500).send('User not found');
-    return res.status(200).send({user: user});
+  if (req.params.userId === '001') return res.send({name:'todd'})
+  else if (req.params.userId === '002') return res.send({name:'kent'})
+
+
+  User.findById(req.params.userId).select('-facebook -createdAt')
+  .exec((err, user) => {
+    if (err) return res.send(err).status(500);
+    if (!user) return res.send('USER NOT FOUND').status(400);
+    return res.send(user);
   });
 };

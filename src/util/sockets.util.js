@@ -8,7 +8,6 @@ io.on('connection', (socket) => {
 
   socket.emit('user connected', socket.id);
 
-
   socket.on('available for chat', (coords) => {
     console.log('\nsocket id avail', socket.id);
     availableChatters.push(socket.id);
